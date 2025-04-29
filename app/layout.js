@@ -4,7 +4,7 @@ import Header from "@/components/header";
 import { Toaster } from "sonner"; // ADD THIS!
 
 export const metadata = {
-  title: "Scheduler",
+  title: "Ares Scheduler",
   description: "Meeting Scheduler",
 };
 
