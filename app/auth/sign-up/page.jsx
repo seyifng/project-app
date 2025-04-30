@@ -10,6 +10,8 @@ const SignUpPage = () => {
     password: '',
     role: 'client',
     email: '',
+    provider_name: '',
+    specialization: '',
   });
   const [error, setError] = useState('');
   const router = useRouter();
@@ -36,13 +38,12 @@ const SignUpPage = () => {
         return;
       }
 
-      // Redirect on success
       router.push('/dashboard');
     } catch (err) {
       setError('Server error');
       console.error(err);
     }
-  }; // << this was missing before
+  };
 
   return (
     <div className="max-w-md mx-auto mt-20">
@@ -56,6 +57,14 @@ const SignUpPage = () => {
           <option value="client">Client</option>
           <option value="provider">Provider</option>
         </select>
+
+        {formData.role === 'provider' && (
+          <>
+            <input type="text" name="provider_name" placeholder="Provider Name" onChange={handleChange} className="w-full p-2 border" required />
+            <input type="text" name="specialization" placeholder="Specialization" onChange={handleChange} className="w-full p-2 border" required />
+          </>
+        )}
+
         {error && <p className="text-red-500">{error}</p>}
         <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">Create Account</button>
       </form>

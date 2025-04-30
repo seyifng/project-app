@@ -27,24 +27,18 @@ export default function Header() {
 
   return (
     <nav className="mx-auto py-2 px-4 flex justify-between items-center shadow-md border-b-2">
-      <Link href="/" className="flex items-center">
+      <Link href={user ? "/dashboard" : "/"} className="flex items-center">
         <Image
           src="/logo.png"
           width="150"
           height="60"
-          alt="Schedulrr Logo"
+          alt="Entergalactic Logo"
           className="h-16 w-auto"
         />
-      </Link>
+    </Link>
+
 
       <div className="flex items-center gap-4">
-        <Link href="/events?create=true">
-          <Button variant="default" className="flex items-center gap-2">
-            <PenBox size={18} />
-            <span className="hidden sm:inline">Create Event</span>
-          </Button>
-        </Link>
-
         {user ? (
           <UserMenu user={user} />
         ) : (

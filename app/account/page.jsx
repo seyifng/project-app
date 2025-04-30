@@ -1,10 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 export default function AccountPage() {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', role: '' });
+  const router = useRouter();
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: ''
+  });
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -15,7 +22,7 @@ export default function AccountPage() {
           name: data.user.name,
           email: data.user.email,
           phone: data.user.phone || '',
-          role: data.user.role || 'client',
+          role: data.user.role || ''
         });
       }
     };
@@ -33,6 +40,22 @@ export default function AccountPage() {
       toast.success('Account updated');
     } else {
       toast.error(data.message || 'Update failed');
+    }
+  };
+
+  const handleDelete = async () => {
+    const confirm = window.confirm('Are you sure you want to delete your account? This cannot be undone.');
+    if (!confirm) return;
+
+    const res = await fetch('/api/delete-account', {
+      method: 'POST',
+    });
+    const data = await res.json();
+    if (data.success) {
+      toast.success('Account deleted');
+      router.push('/');
+    } else {
+      toast.error(data.message || 'Failed to delete account');
     }
   };
 
@@ -72,6 +95,15 @@ export default function AccountPage() {
           Save Changes
         </button>
       </form>
+
+      <hr className="my-6" />
+
+      <button
+        onClick={handleDelete}
+        className="px-4 py-2 bg-red-600 text-white rounded w-full"
+      >
+        Delete Account
+      </button>
     </div>
   );
 }

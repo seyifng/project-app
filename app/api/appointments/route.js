@@ -3,16 +3,16 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  const cookieStore = cookies();
-  const session = await cookieStore.get('user_session');
-
-  if (!session) {
-    return NextResponse.json({ success: false, message: 'Not authenticated' }, { status: 401 });
-  }
-
-  const user = JSON.parse(session.value);
-
   try {
+    const cookieStore = await cookies();
+    const session = await cookieStore.get('user_session');
+
+    if (!session) {
+      return NextResponse.json({ success: false, message: 'Not authenticated' });
+    }
+
+    const user = JSON.parse(session.value);
+
     const connection = await mysql.createConnection({
       host: process.env.CMSC408_HW8_HOST,
       user: process.env.CMSC408_HW8_USER,
@@ -20,19 +20,34 @@ export async function GET() {
       database: process.env.CMSC408_HW8_DB_NAME,
     });
 
-    const [appointments] = await connection.execute(
-      `SELECT a.appointment_id, a.date, a.time, a.status, s.name AS service
-       FROM Appointment a
-       JOIN Service s ON a.service_id = s.service_id
-       WHERE a.user_id = ?`,
-      [user.id]
-    );
+    let appointmentsQuery = `
+      SELECT 
+        a.*, 
+        s.service_name,
+        u.name AS client_name,
+        u.email AS client_email
+      FROM Appointment a
+      JOIN Service s ON a.service_id = s.service_id
+      JOIN Users u ON a.user_id = u.user_id
+    `;
+
+    // If user is client, only show their appointments
+    if (user.role === 'client') {
+      appointmentsQuery += ` WHERE a.user_id = ? ORDER BY a.date ASC, a.time ASC`;
+    } else {
+      // If provider, only show appointments for their services
+      appointmentsQuery += `
+        WHERE s.provider_id = ? ORDER BY a.date ASC, a.time ASC
+      `;
+    }
+
+    const [appointments] = await connection.execute(appointmentsQuery, [user.id]);
 
     await connection.end();
 
     return NextResponse.json({ success: true, appointments });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ success: false, message: 'Failed to load appointments' });
+    return NextResponse.json({ success: false, message: 'Server error' });
   }
 }

@@ -1,7 +1,7 @@
 import mysql from 'mysql2/promise';
 
 export async function POST(req) {
-  const { name, email, phone, password, role } = await req.json();
+  const { name, email, phone, password, role, provider_name, specialization } = await req.json();
 
   try {
     const connection = await mysql.createConnection({
@@ -22,13 +22,22 @@ export async function POST(req) {
     }
 
     // Insert new user
-    await connection.execute(
+    const [result] = await connection.execute(
       'INSERT INTO Users (name, phone, password_hash, role, email) VALUES (?, ?, ?, ?, ?)',
       [name, phone, password, role, email]
     );
 
-    await connection.end();
+    const user_id = result.insertId;
 
+    // If provider, insert into Provider table
+    if (role === 'provider') {
+      await connection.execute(
+        'INSERT INTO Provider (provider_id, provider_name, specialization) VALUES (?, ?, ?)',
+        [user_id, provider_name, specialization]
+      );
+    }
+
+    await connection.end();
     return new Response(JSON.stringify({ message: 'User created successfully!' }), { status: 201 });
   } catch (error) {
     console.error('Signup Error:', error);
